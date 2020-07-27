@@ -238,7 +238,57 @@ void menu4()                                            //Função genérica par
 
 
 
+/*
+Programa: DimmerInterface
+Acionamento de um dimmer com Triac e Nanoshield Interface
+*/
 
+// Inlcui a biblioteca Dimmer
+#include "Dimmer.h"
+
+// Configura a lampa no Triac: pindo D3
+Dimmer lamp(3);
+
+int buttons = A0; // Botões: pino A0
+
+// Aumento na porcentagem para cada leitura do botão
+//   (aumentar para variar a luminosidade mais rápido)
+int delta = 2;
+
+// Valor da potência da lâmpada
+int valor = 0;
+
+void setup()
+{
+  // Inicializa o pino do Nanoshield Interface como entrada
+  pinMode(buttons, INPUT);
+  // Inicializa a lâmpada dimerizada
+  lamp.begin();
+}
+
+void loop()
+{
+  // Lê o valor do potenciômetro (de 0 a 1023)
+  int pos = analogRead(buttons);
+  
+  // Botão RIGHT: diminui o tempo até o acionamento,
+  //   aumentando a intensidade da lâmpada
+  if (pos < 69) valor -= delta;
+  
+  // Botão LEFT: aumenta o tempo até o acionamento,
+  //   diminuindo a intensidade da lâmpada
+  if (pos >= 408 && pos <= 630) valor += delta;
+  
+  // Limita os valores máximo e mínimo da potência da lâmpada
+  if (valor > 100) valor = 100;
+  if (valor < 0) valor = 0;
+  
+  // Atualiza o valor da lâmpada
+  lamp.set(valor);
+
+  // Esperar para ler o botão novamente
+  delay(50);
+}
 
 
 
