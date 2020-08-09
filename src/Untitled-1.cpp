@@ -1,22 +1,27 @@
+/*
+   Curso de Arduino WR Kits Aula 61
+   
+   www.wrkits.com.br
+   facebook.com/wrkits
+   youtube.com/user/canalwrkits
+   
+   Sub-Menu para Display LCD 16 x 2
+   
+   Autor: Eng. Wagner Rambo, Data: Abril de 2016
 
+*/
 
 // --- Bibliotecas Auxiliares ---
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>                             //Biblioteca para o display LCD
+#include <LiquidCrystal.h>                              //Biblioteca para o display LCD
 
 // --- Mapeamento de Hardware ---
-#define butUp                                        //Botão (69 a 230)
-#define butDown                                      //Botão (231 a 407)
-#define butleft                                      //Botão (408 a 630)
-#define butright                                     //Botão (menor que 69)
-#define butselect                                    //Botão (631 a 896)
-#define BUZZER    11                                 //BUZZER D5
-#define LEDVERDE  25                                 //LEDVERDE A2
-#define LEDAMARELO 24                                //LEDVERDE A1
-int analogPin = 23;                                  //Pino analógico A0  BOTAO 
-int BOTAO = 900;                                     //Todos soltos (maior que 897)
-
-
+#define butUp    12                                     //Botão para selecionar tela acima no digital 12
+#define butDown  11                                     //Botão para selecionar tela abaixo no digital 11
+#define butP     10                                     //Botão de ajuste mais no digital 10
+#define butM      9                                     //Botão de ajuste menos no digital 9
+#define select    8                                     //Botão de seleção no digital 8
+#define Lamp1    A0                                     //Saída para lâmpada 1 no A0 (será usado como digital)
+#define Lamp2    A1                                     //Saída para lâmpada 2 no A1 (será usado como digital)
 
 // --- Protótipo das Funções Auxiliares ---
 void changeMenu();                                      //Função para modificar o menu atual
@@ -26,34 +31,42 @@ void temperatura();                                     //Função do menu2, tem
 void lights();                                          //Função do menu3, acionamento de lampadas
 void menu4();                                           //Função do menu4
 
+void dispSubMenu4();                                    //Função do sub menu4  
+void readSelect(char option);                           //Função de Leitura do botão select para seleção de subMenus
+void subMenu4_1();                                      //Função para subMenu4_1
+void subMenu4_2();                                      //Função para subMenu4_2
+void subMenu4_3();                                      //Função para subMenu4_3
+
+
 // --- Variáveis Globais ---
 char menu = 0x01;                                       //Variável para selecionar o menu
+char subMenu4 = 0x01;                                   //Variável para selecionar subMenu no menu4
 char set1 = 0x00, set2 = 0x00;                          //Controle das lâmpadas
-boolean t_butUp, t_butDown, t_butP, t_butM;             //Flags para armazenar o estado dos botões
+boolean t_butUp, t_butDown, t_butP, t_butM, t_select;   //Flags para armazenar o estado dos botões
 
 // --- Hardware do LCD ---
-// Inicializa o display no endereco 0x27
-LiquidCrystal_I2C lcd(0x27,2,1,0,4,5,6,7,3, POSITIVE);
-
-
-
-
+LiquidCrystal disp(7,  //RS no digital 7
+                   6,  //EN no digital 6
+                   5,  //D4 no digital 5
+                   4,  //D5 no digital 4
+                   3,  //D6 no digital 3
+                   2); //D7 no digital 2
 
 // --- Configurações Iniciais ---
 void setup()
 {
-   lcd.begin (16,2);                                     //Inicializa LCD 16 x 2
+  disp.begin(16,2);                                      //Inicializa LCD 16 x 2
   
-  for(char i=9; i<13; i++) pinMode(i, INPUT_PULLUP);     //Entrada para os botões (digitais 9 a 12) com pull-ups internos
+  for(char i=8; i<13; i++) pinMode(i, INPUT_PULLUP);     //Entrada para os botões (digitais 8 a 12) com pull-ups internos
   
-  pinMode(BUZZER, OUTPUT);                                //Configura saída para BUZZER
-  pinMode(LEDVERDE, OUTPUT);                                //Configura saída para LEDVERDE
-  pinMode(LEDAMARELO, OUTPUT);                                //Configura saída para LEDAMARELO
-
+  pinMode(Lamp1, OUTPUT);                                //Configura saída para lâmpada 1
+  pinMode(Lamp2, OUTPUT);                                //Configura saída para lâmpara 2
+  
   t_butUp   = 0x00;                                      //limpa flag do botão Up
   t_butDown = 0x00;                                      //limpa flag do botão Down
   t_butP    = 0x00;                                      //limpa flag do botão P
   t_butM    = 0x00;                                      //limpa flag do botão M
+  t_select  = 0x00;                                      //limpa flag do botão select
   
   digitalWrite(Lamp1, LOW);                              //Lâmpada 1 inicia apagada
   digitalWrite(Lamp2, LOW);                              //Lâmpada 2 inicia apagada
@@ -144,10 +157,7 @@ void temperatura()                                      //Temperatura (menu2)
 {
    disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
    disp.print("Temperatura");                           //Imprime mensagem
-   disp.setCursor(1,1);                                 //Posiciona cursor na coluna 2, linha 2
-   
-   // Desenvolver uma função de data e hora...
-   
+   disp.setCursor(1,1);                                 //Posiciona cursor na coluna 2, linha 2   
    disp.print("25 Celsius");                            //Mostrador (apenas ilustrativo......)   
 
 } //end temperatura()
@@ -219,12 +229,8 @@ void menu4()                                            //Função genérica par
 {
    disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
    disp.print("Menu 4");                                //Imprime mensagem
-   disp.setCursor(7,1);                                 //Posiciona cursor na coluna 8, linha 2
-   
-   // Desenvolver uma função de data e hora...
-   
-   disp.print("WR Kits");                               //Créditos  
-
+    
+   dispSubMenu4();
 
 } //end menu4
 
@@ -233,66 +239,104 @@ void menu4()                                            //Função genérica par
    //............
 
 
-
-
-
-
-
-/*
-Programa: DimmerInterface
-Acionamento de um dimmer com Triac e Nanoshield Interface
-*/
-
-// Inlcui a biblioteca Dimmer
-#include "Dimmer.h"
-
-// Configura a lampa no Triac: pindo D3
-Dimmer lamp(3);
-
-int buttons = A0; // Botões: pino A0
-
-// Aumento na porcentagem para cada leitura do botão
-//   (aumentar para variar a luminosidade mais rápido)
-int delta = 2;
-
-// Valor da potência da lâmpada
-int valor = 0;
-
-void setup()
+void dispSubMenu4()                                     //Mostra o sub menu atual para o menu 4
 {
-  // Inicializa o pino do Nanoshield Interface como entrada
-  pinMode(buttons, INPUT);
-  // Inicializa a lâmpada dimerizada
-  lamp.begin();
-}
+  
+  if(!digitalRead(butP))    t_butP    = 0x01;          //Botão P pressionado? Seta flag
+  if(!digitalRead(butM))    t_butM    = 0x01;          //Botão M pressionado? Seta flag
+   
+   if(digitalRead(butP) && t_butP)                      //Botão P solto e flag setada?
+   {                                                    //Sim...
+      t_butP = 0x00;                                    //Limpa flag
+      
+      subMenu4++;                                       //incrementa subMenu4
+      
+      if(subMenu4 > 3) subMenu4 = 0x01;                 //se maior que 3, volta a ser 1
+      
+   
+   } //end butP
+   
+   if(digitalRead(butM) && t_butM)                      //Botão D solto e flag setada?
+   {                                                    //Sim...
+      t_butM = 0x00;                                    //Limpa flag
+      
+      subMenu4--;                                       //decrementa subMenu4
+      
+      if(subMenu4 < 1) subMenu4 = 0x03;                 //se menor que 1, volta a ser 3
+      
+    
+   
+   } //end butM
+  
+  
+  
+    switch(subMenu4)                                    //Controle da variável subMenu
+    {
+       case 0x01:                                       //Caso 1
+             disp.setCursor(1,1);                       //Posiciona cursor na coluna 2, linha 2   
+             disp.print("Sub Menu 01");  
+             readSelect(1);                             //Lê botão select com parâmetro 1             
+             
+             break;                                     //break
+       case 0x02:                                       //Caso 2
+             disp.setCursor(1,1);                       //Posiciona cursor na coluna 2, linha 2   
+             disp.print("Sub Menu 02");                 
+             readSelect(2);                             //Lê botão select com parâmetro 2 
+             
+             break;                                     //break
+       case 0x03:                                       //Caso 2
+             disp.setCursor(1,1);                       //Posiciona cursor na coluna 2, linha 2   
+             disp.print("Sub Menu 03");   
+             readSelect(3);                             //Lê botão select com parâmetro 3              
+             
+             break;                                     //break
+        
+    
+    } //end switch menu
 
-void loop()
+} //end dispMenu
+
+
+void readSelect(char option)                            //Leitura do botão select para seleção de subMenus
 {
-  // Lê o valor do potenciômetro (de 0 a 1023)
-  int pos = analogRead(buttons);
-  
-  // Botão RIGHT: diminui o tempo até o acionamento,
-  //   aumentando a intensidade da lâmpada
-  if (pos < 69) valor -= delta;
-  
-  // Botão LEFT: aumenta o tempo até o acionamento,
-  //   diminuindo a intensidade da lâmpada
-  if (pos >= 408 && pos <= 630) valor += delta;
-  
-  // Limita os valores máximo e mínimo da potência da lâmpada
-  if (valor > 100) valor = 100;
-  if (valor < 0) valor = 0;
-  
-  // Atualiza o valor da lâmpada
-  lamp.set(valor);
-
-  // Esperar para ler o botão novamente
-  delay(50);
-}
+    
+   if(!digitalRead(select))     t_select    = 0x01;      //Botão select pressionado? Seta flag
+   
+   
+   if(digitalRead(select) && t_select)                  //Botão select solto e flag setada?
+   {                                                    //Sim...
+        t_select = 0x00;                                //Limpa flag
+        
+        switch(option)
+        {
+           case 0x01: subMenu4_1(); break;
+           
+           case 0x02: subMenu4_2(); break;
+           
+           case 0x03: subMenu4_3(); break;
+        
+        } //end switch option
+   
+   } //end if
 
 
+} //end readSelect
 
 
+void subMenu4_1()
+{
+  while(1)
+  {
+   disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
+   disp.print("Tarefa 1");                              //Imprime mensagem
+   disp.setCursor(0,1);                                 //Posiciona cursor na coluna 1, linha 2   
+   disp.print("Em funcionamento");                      //Mostrador (apenas ilustrativo......)   
+  }
+
+} //end subMenu4_1
+
+
+void subMenu4_2()
 
 
 
