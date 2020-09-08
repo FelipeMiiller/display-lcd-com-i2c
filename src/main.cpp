@@ -211,12 +211,23 @@ void subMonitoramento()
 {
   while (1)
   {
+  int pos = analogRead(BUTTON);        // Lê o valor do potenciômetro (de 0 a 1023)
   
+  if ((pos >= 631) && (pos <= 896)) t_butSelect = 0x01 ;        // Botão Select : pressionado? Seta flag
   
    disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
    disp.print("entra");                              //Imprime mensagem
    disp.setCursor(0,1);                                 //Posiciona cursor na coluna 1, linha 2   
    disp.print("monitoramento");                      //Mostrador (apenas ilustrativo......)   
+
+
+     if ((pos > 897) && t_butSelect)
+  {  
+     t_butSelect = 0x00;                                 //Limpa flag
+     disp.clear();                                     //Limpa display
+     asm volatile ("  jmp 0");                         //reseta uno
+  }
+
 
 
   } //end subMenu4_1  
@@ -447,77 +458,6 @@ void changedata_horaMenu()                         //Mostra o sub menu atual par
 
  } //end while
 } //end dispMenu
-
-
-
-
-void readSelect(char option)                            //Leitura do botão select para seleção de subMenus
-{
-  int pos = analogRead(BUTTON);        // Lê o valor do potenciômetro (de 0 a 1023)
-  if (pos >= 631 && pos <= 896) t_butSelect = 0x01 ;        // Botão Select : pressionado? Seta flag
-   
-   
-   if((pos > 897)  && t_butSelect)                  //Botão select solto e flag setada?
-   {                                                    //Sim...
-        t_butSelect = 0x00;                                //Limpa flag
-        
-        switch(option)
-        {
-           case 0x01: subMenu4_1(); break;
-           
-           case 0x02: subMenu4_2(); break;
-           
-           case 0x03: subMenu4_3(); break;
-        
-        } //end switch option
-   
-   } //end if
-
-
-} //end readSelect
-
-
-
-
-void subMenu4_1()
-{
-  while(1)
-  {
-   disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
-   disp.print("Tarefa 1");                              //Imprime mensagem
-   disp.setCursor(0,1);                                 //Posiciona cursor na coluna 1, linha 2   
-   disp.print("Em funcionamento");                      //Mostrador (apenas ilustrativo......)   
-  }
-
-} //end subMenu4_1
-
-void subMenu4_2()
-{
-  while(1)
-  {
-   disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
-   disp.print("Tarefa 2");                              //Imprime mensagem
-   disp.setCursor(0,1);                                 //Posiciona cursor na coluna 1, linha 2   
-   disp.print("Em funcionamento");                      //Mostrador (apenas ilustrativo......)   
-  }
-
-} //end subMenu4_1
-
-void subMenu4_3()
-{
-  while(1)
-  {
-   disp.setCursor(0,0);                                 //Posiciona cursor na coluna 1, linha 1
-   disp.print("Tarefa 3");                              //Imprime mensagem
-   disp.setCursor(0,1);                                 //Posiciona cursor na coluna 1, linha 2   
-   disp.print("Em funcionamento");                      //Mostrador (apenas ilustrativo......)   
-  }
-
-} //end subMenu4_1
-
-
-
-
 
 
 
