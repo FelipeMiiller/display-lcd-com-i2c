@@ -24,33 +24,22 @@ char itime[20];
 
 // --- Protótipo das Funções Auxiliares ---
 
-void readSelect(char option);      
+void MainreadSelect(char option);                           //Função de Leitura do botão select para seleção de subMenus   
 void changeMainMenu();                                      //Função para modificar o menu atual
 void dispMainMenu();                                        //Função para mostrar o menu atual
 
-void Monitoramento();                                     //Função do menu2, temperatura
+void Monitoramento();                                     //Função do menu1
 void subMonitoramento();
 
 
 
-void changeselect_horaMenu();
+
 void changedata_horaMenu();
-void data_hora();                                       //Função do menu1, data e hora
-void MainreadSelect(char option);                           //Função de Leitura do botão select para seleção de subMenus
+void data_hora();                                       //Função do menu2, data e hora
 
 
 
 
-void subMenu4_2();
-void subMenu4_1();
-void subMenu4_3();
-
-
-
-
-
-void dispsetdata();                                    //Função do sub menu4  
-void readSelect(char option);                           //Função de Leitura do botão select para seleção de subMenus
 
 
 
@@ -96,7 +85,7 @@ void setup()
  
 void loop()
 {
-  retornar:
+ 
   changeMainMenu();                                     
   dispMainMenu();                               
  
