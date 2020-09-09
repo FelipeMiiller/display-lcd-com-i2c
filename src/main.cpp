@@ -3,9 +3,38 @@
 #include "Dimmer.h"
 #include <stdio.h>
 #include "Nanoshield_RTC.h"
+#include <Nanoshield_ADC.h>
 
 // Inicializa o display no endereco 0x27
 LiquidCrystal_I2C disp(0x27,2,1,0,4,5,6,7,3, POSITIVE);
+
+
+
+// 16-bit ADC (change to Nanoshield_ADC12 to use the 12-bit version)
+Nanoshield_ADC adc;
+
+
+
+// Use channel 
+int channel10 = 0;
+int channel11 = 1;
+int channel12 = 2;
+int channel13 = 3;
+
+int channel20 = 0;
+int channel21 = 1;
+int channel22 = 2;
+int channel23 = 3;
+
+int channel30 = 0;
+int channel31 = 1;
+int channel32 = 2;
+int channel33 = 3;
+
+
+
+
+
 
 Nanoshield_RTC rtc;
 // ---  Clock           ---
@@ -56,11 +85,63 @@ boolean t_butUp, t_butDown, t_butRight, t_butLeft, t_butSelect,t_butSelectwhile;
 void setup()
 {
   disp.begin (16,2);
-  // Initialize RTC
-  if (!rtc.begin()) {
+  // Inicializa RTC
+    if (!rtc.begin()) {
     Serial.println("Failed starting RTC");
     while(true);
-  };
+   };
+
+   Serial.println("ADC Nanoshield - Continuous Mode");
+   adc.begin();
+  
+  /* Ajuste o ganho para dois (faixa de 2.048 V) 
+        para obter a resolução máxima para a faixa de 4-20 mA*/
+   adc.setGain(GAIN_TWO);
+
+  /* Definir taxa de amostragem. Os valores possíveis são:
+   16 bits (Nanoshield_ADC): 8, 16, 32, 64, 128, 250, 475, 860
+   Se não for um dos acima, o valor inferior mais próximo será selecionado. */
+   adc.setSampleRate(250);
+
+  // Entre no modo contínuo e comece a ler o canal 0 ao 3 no endereço i2c 1001000
+   adc.setContinuous(true);
+   adc.readRegister(0x48,channel10); 
+   adc.readRegister(0x48,channel11);
+   adc.readRegister(0x48,channel12);
+   adc.readRegister(0x48,channel13);
+
+   adc.readADC_SingleEnded(channel10);
+   adc.readADC_SingleEnded(channel11);
+   adc.readADC_SingleEnded(channel12);
+   adc.readADC_SingleEnded(channel13);
+
+   adc.readRegister(0x49,channel20); 
+   adc.readRegister(0x49,channel21);
+   adc.readRegister(0x49,channel22);
+   adc.readRegister(0x49,channel23);
+
+   adc.readADC_SingleEnded(channel20);
+   adc.readADC_SingleEnded(channel21);
+   adc.readADC_SingleEnded(channel22);
+   adc.readADC_SingleEnded(channel23);
+
+   adc.readRegister(0x4a,channel30); 
+   adc.readRegister(0x4a,channel31);
+   adc.readRegister(0x4a,channel32);
+   adc.readRegister(0x4a,channel33);
+
+   adc.readADC_SingleEnded(channel30);
+   adc.readADC_SingleEnded(channel31);
+   adc.readADC_SingleEnded(channel32);
+   adc.readADC_SingleEnded(channel33);
+  // end            -------------------------------------------------------------------------------
+
+
+  
+  Serial.print("Configured sample rate: ");
+  Serial.print(adc.getSampleRate());
+  Serial.println(" SPS");
+  Serial.println("The actual sample rate will be lower because of I2C communications");
 
   pinMode(BUZZER, OUTPUT);                               //Configura saída para BUZZER
   pinMode(LEDVERDE, OUTPUT);                             //Configura saída para LEDVERDE
@@ -69,16 +150,12 @@ void setup()
   digitalWrite(LEDVERDE, LOW);                            //LEDVERDE apagada
   digitalWrite(LEDAMARELO, LOW);                          //LEDVERDE apagada
 
-
    t_butUp = 0x00;                                      //limpa flag do botão menuhora
    t_butDown = 0x00;                                      //limpa flag do botão menuhora
    t_butRight = 0x00;                                      //limpa flag do botão menuhora
    t_butLeft = 0x00;                                      //limpa flag do botão menuhora
    t_butSelect = 0x00;                                    
   
-  
-
-
 
 
 }   //end setup
@@ -92,7 +169,7 @@ void loop()
 
 
 
-}
+} //end loop
 
 
 void changeMainMenu()  
@@ -151,7 +228,7 @@ void dispMainMenu()
   }
 
 
-}  
+}   //end dispMainMenu()
 
 void MainreadSelect(char option)                            //Leitura do botão select para seleção de subMenus
 {
